@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # ========================
-# Script: empty_cells
+# Script: preprocess
 # Author: Danyan Chen
 # Student id : 24063952
 # Description:
@@ -33,17 +33,39 @@ then
 fi
 
 
+
+# A gawk to get the largest ID
+largest_id=$(gawk '
+BEGIN{
+    FS=";"
+}
+{   
+    # Skip NR=1 (header)
+    # Skip the empty field
+    if(NR>1 && $1 ~ /^[0-9]+$/ && $1 > max)
+    {
+        max = $1
+    }
+}
+END{
+
+    print max+1
+}
+' "$file_path")
+
 # ---------- Clean data -------------
-# # Clean input by removing all non-ASCII characters (code > 127) using tr
-tr -cd '\0-\177'  < "$file_path" | \
-gawk '
+# Clean input by removing all non-ASCII characters (code > 127) using tr
+tr -cd '\0-\177'  < "$file_path"  | \
+gawk -v next_id="$largest_id" '
+BEGIN{
+    FS=";"
+}
 
 { 
-    # Convert the ";" separator to the  <tab> character "\t"
-    gsub(/;/,"\t")
+
 
     # Convert the Microsoft line endings to Unix line endings
-    gsub(/\r\n/,"\r")
+    gsub(/\r/, "")
 
 
     # Replace commas with dots in numeric fields
@@ -54,7 +76,17 @@ gawk '
             gsub(/,/,".",$i)
         }
     }
+    
+    # Deal with the empty id
+    if($1  ~ /^[ \t]*$/ )
+    {
+        $1 = next_id++
+    }
+
+    # Convert the ";" separator to the  <tab> character "\t"
+    gsub(/;/,"\t")
+
     print
 }
-
 ' 
+
