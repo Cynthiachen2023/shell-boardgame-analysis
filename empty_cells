@@ -30,3 +30,34 @@ then
     exit 1
 fi
 
+# ---------- Obtain the column names ----------
+
+
+gawk '
+
+BEGIN {
+    FS=";"
+}
+
+# Get the column names
+NR ==1 {
+    for (i=1; i<=NF; i++){
+        # Store the column names in the column array
+        column[i] = $i
+    }
+
+    # Only read the first line
+    next
+}
+
+{for (i =1; i <=NF; i++){
+        cell = $i
+        gsub(/[ \t]/, "", $i)    
+        if (cell == ""){
+            # If the cell is empty, increment the count for that column
+            count[i]++
+        }
+    }
+}
+
+'"$file_path"
