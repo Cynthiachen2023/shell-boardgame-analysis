@@ -1,0 +1,8 @@
+ ./preprocess tiny_sample.txt > tiny_clean.tsv
+  diff tiny_clean.tsv tiny_sample.tsv
+
+./preprocess sample1.txt > sample1_actual.tsv
+diff sample1.tsv sample1_actual.tsv
+
+./preprocess sample.txt > sample_actual.tsv
+diff sample.tsv sample_actual.tsv

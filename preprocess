@@ -38,7 +38,11 @@ fi
 largest_id=$(gawk '
 BEGIN{
     FS=";"
+
 }
+
+
+
 {   
     # Skip NR=1 (header)
     # Skip the empty field
@@ -59,6 +63,14 @@ tr -cd '\0-\177'  < "$file_path"  | \
 gawk -v next_id="$largest_id" '
 BEGIN{
     FS=";"
+    OFS = "\t"
+}
+
+NR == 1 {
+    # Convert header line 
+    gsub(/;/, "\t")
+    print
+    next
 }
 
 { 
@@ -83,10 +95,7 @@ BEGIN{
         $1 = next_id++
     }
 
-    # Convert the ";" separator to the  <tab> character "\t"
-    gsub(/;/,"\t")
-
-    print
+    print 
 }
 ' 
 
