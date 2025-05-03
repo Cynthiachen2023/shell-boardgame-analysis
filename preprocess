@@ -33,22 +33,28 @@ then
 fi
 
 
-# ---------- Convert the ";" separator to the  <tab> character "\t" -------------
+# ---------- Clean data -------------
+# # Clean input by removing all non-ASCII characters (code > 127) using tr
+tr -cd '\0-\177'  < "$file_path" | \
 gawk '
 
 { 
-# Convert the ";" separator to the  <tab> character "\t"
-gsub(/;/,"\t")
+    # Convert the ";" separator to the  <tab> character "\t"
+    gsub(/;/,"\t")
 
-# Convert the Microsoft line endings to Unix line endings
-for(i=1;i<=NF;i++)
-{
-    if ($i ~ /^[0-9][0-9]*,[0-9][0-9]*$/)
+    # Convert the Microsoft line endings to Unix line endings
+    gsub(/\r\n/,"\r")
+
+
+    # Replace commas with dots in numeric fields
+    for(i=1;i<=NF;i++)
     {
-        gsub(/,/,".",$i)
+        if ($i ~ /^[0-9][0-9]*,[0-9][0-9]*$/)
+        {
+            gsub(/,/,".",$i)
+        }
     }
-}
-print
+    print
 }
 
-' "$file_path"
+' 

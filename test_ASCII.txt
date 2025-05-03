@@ -1,0 +1,2 @@
+ASCII test: Hello, world!
+Non-ASCII test: Café™ — 你好吗？✓
