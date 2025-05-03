@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# ========================
+# Script: empty_cells
+# Author: Danyan Chen
+# Student id : 24063952
+# Description:
+#   This script takes a txt file as input and count the empty cells from it.
+# ========================
+
+
+# ---------- Get parameters & Validate parameters -------------
+file_path=$1
+
+if test $# -ne 1  
+then 
+    echo "Error: Expected 1 argument, but got $#, usage: ./empty_cells <file_path>" >&2
+    exit 1
+fi
+
+if ! echo "$file_path" | grep -q '\.txt$'
+then
+    echo "Error: The specified input file '$file_path' is not a CSV file." >&2
+    exit 1
+fi
+
+if test ! -s "$file_path"
+then
+    echo "Error: The specified input file '$file_path' does not exist or is empty." >&2
+    exit 1
+fi
+
