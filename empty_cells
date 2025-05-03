@@ -60,4 +60,12 @@ NR ==1 {
     }
 }
 
-'"$file_path"
+END{
+    for (i=1; i <= length(column); i++){
+        # Print the column name and the count of empty cells
+        # "+0" is used to prevent some columns no empty cells from printing ""
+        printf ("%s: %d\n", column[i], count[i]+0)
+    }
+
+}
+' "$file_path"
