@@ -20,11 +20,6 @@ then
     exit 1
 fi
 
-if ! echo "$file_path" | grep -q '\.txt$'
-then
-    echo "Error: The specified input file '$file_path' is not a txt file." >&2
-    exit 1
-fi
 
 if test ! -s "$file_path"
 then
@@ -34,15 +29,9 @@ fi
 
 
 
-# A gawk to get the largest ID
-largest_id=$(gawk '
-BEGIN{
-    FS=";"
-
-}
-
-
-
+# # Use gawk to find the maximum ID in column 1 (ignoring header and non-numeric rows), then add 1
+next_id=$(gawk '
+BEGIN{FS=";"}
 {   
     # Skip NR=1 (header)
     # Skip the empty field
@@ -51,16 +40,13 @@ BEGIN{
         max = $1
     }
 }
-END{
-
-    print max+1
-}
+END{print max+1}
 ' "$file_path")
 
 # ---------- Clean data -------------
-# Clean input by removing all non-ASCII characters (code > 127) using tr
+# Remove non-ASCII characters, then clean and reformat fields using gawk
 tr -cd '\0-\177'  < "$file_path"  | \
-gawk -v next_id="$largest_id" '
+gawk -v next_id="$next_id" '
 BEGIN{
     FS=";"
     OFS = "\t"
@@ -74,7 +60,7 @@ NR == 1 {
 }
 
 { 
-
+    if (NF == 0) next
 
     # Convert the Microsoft line endings to Unix line endings
     gsub(/\r/, "")
@@ -89,7 +75,7 @@ NR == 1 {
         }
     }
     
-    # Deal with the empty id
+    # Fill in missing ID
     if($1  ~ /^[ \t]*$/ )
     {
         $1 = next_id++

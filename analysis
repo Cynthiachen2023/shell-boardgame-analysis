@@ -5,7 +5,11 @@
 # Author: Danyan Chen
 # Student id : 24063952
 # Description:
-#   
+# This script analyzes cleaned board game data to answer four research questions:
+# 1. Most popular game mechanic
+# 2. Most common domain
+# 3. Correlation between year and average rating
+# 4. Correlation between complexity and average rating
 # ========================
 
 
@@ -29,14 +33,14 @@ fi
 gawk '
 function find_max(array) 
 {
-        max_val = 0
-        for (k in array) {
-            if (array[k] > max_val) {
-                max_val = array[k]
-                max_key = k
-            }
+    max_val = 0
+    for (k in array) {
+        if (array[k] > max_val) {
+            max_val = array[k]
+            max_key = k
         }
-        return max_key "&&" max_val
+    }
+    return max_key "&&" max_val
 }
 
 function pearson_r(name, n, sum_x, sum_y, sum_x_y, sum_x2, sum_y2)
@@ -81,7 +85,7 @@ BEGIN{
     delete mechanic_count
     delete domain_count
 
-    # Correlation accumulators (by key)
+    # Clears all global arrays at `BEGIN` to avoid state leftover
     delete var_n
     delete var_sum_x
     delete var_sum_y
@@ -91,50 +95,31 @@ BEGIN{
 }
 
 {
-# ---------- Q1 The most popular game mechanics is xxx found in xx games -------------
-
-    # Incase some empty field with multiple space
-    # $13 is the column mechanics
+    # Q1: Count game mechanics (column 13)
     clean_mechanic = $13
     gsub(/[ \t\r\n]+/, "", clean_mechanic)
 
     
     # skip header and skip the empty field
     if(NR>1 && clean_mechanic !=""){
-
-        # split(string, array, separator)
         split($13, row_values, "," )
-
         for(i=1;i<=length(row_values);i++){
-
             # Replace the possible space with ""
             gsub(/^ +| +$/,"",row_values[i])
             mechanic_count[row_values[i]]++
         }
-
     }
 
-# ---------- Q2 The most style of game is xxx found in xx games -------------
-
-    # Incase some empty field with multiple space
-    # $14 is the column domains
+    # Q2: Count domains (column 14)
     clean_domain = $14
     gsub(/[ \t\r\n]+/, "", clean_domain)
 
-    
-    # skip header and skip the empty field
     if(NR>1 && clean_domain !=""){
-
-        # split(string, array, separator)
         split($14, row_values, "," )
-
         for(i=1;i<=length(row_values);i++){
-
-            # Replace the possible space with ""
             gsub(/^ +| +$/,"",row_values[i])
             domain_count[row_values[i]]++
         }
-
     }
 
     if (NR>1){
@@ -161,9 +146,9 @@ END{
     print "The most popular game mechanics is", mparts[1], "found in", mparts[2], "games"
     print "The most style of game is", dparts[1], "found in", dparts[2], "games"
     if (r_year == "undefined") {
-        print "The varelation between the year of publication and the average rating is undefined (zero variance or numeric error)"
+        print "The correlation between the year of publication and the average rating is undefined (zero variance or numeric error)"
     } else {
-        printf "The varelation between the year of publication and the average rating is %.3f\n", r_year
+        printf "The correlation between the year of publication and the average rating is %.3f\n", r_year
     }
 
     if (r_complexity == "undefined") {
