@@ -27,17 +27,31 @@ fi
 
 # ---------- Q1 The most popular game mechanics is Hand Management found in xx games -------------
 gawk '
+function find_max(array) 
+{
+        max_val = 0
+        for (k in array) {
+            if (array[k] > max_val) {
+                max_val = array[k]
+                max_key = k
+            }
+        }
+        return max_key "&&" max_val
+}
+
 BEGIN{
     FS ="\t"
 }
 
 {
     # Incase some empty field with multiple space
-    gsub(/[ \t\r\n]+/, "", $13)
-
     # $13 is the column mechanics
+    clean_mechanic = $13
+    gsub(/[ \t\r\n]+/, "", clean_mechanic)
+
+    
     # skip header and skip the empty field
-    if(NR>1 && $13 !=""){
+    if(NR>1 && clean_mechanic !=""){
 
         # split(string, array, separator)
         split($13, row_values, "," )
@@ -46,23 +60,39 @@ BEGIN{
 
             # Replace the possible space with ""
             gsub(/^ +| +$/,"",row_values[i])
-            count[row_values[i]]++
+            mechanic_count[row_values[i]]++
         }
 
     }
+
+
+    # Incase some empty field with multiple space
+    # $14 is the column domains
+    clean_domain = $14
+    gsub(/[ \t\r\n]+/, "", clean_domain)
+
+    
+    # skip header and skip the empty field
+    if(NR>1 && clean_domain !=""){
+
+        # split(string, array, separator)
+        split($14, row_values, "," )
+
+        for(i=1;i<=length(row_values);i++){
+
+            # Replace the possible space with ""
+            gsub(/^ +| +$/,"",row_values[i])
+            domain_count[row_values[i]]++
+        }
+
+    }
+
 }
 
 END{
-    max_count = 0
-
-    for (i in count){
-        if(count[i] > max_count){
-            max_count = count[i]
-            max_value = i
-        }
-    }
-    print "The most popular mechanic is", max_value, "found in", max_count, "games"
-
-
+    split(find_max(mechanic_count), mparts, "&&")
+    split(find_max(domain_count), dparts, "&&")
+    print "The most popular game mechanics is", mparts[1], "found in", mparts[2], "games"
+    print "The most style of game is", dparts[1], "found in", dparts[2], "games"
 }
 ' "$file_path"
