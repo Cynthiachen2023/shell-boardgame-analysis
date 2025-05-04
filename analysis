@@ -14,7 +14,7 @@ file_path=$1
 
 if test $# -ne 1  
 then 
-    echo "Error: Expected 1 argument, but got $#, usage: ./anlysis <file_path>" >&2
+    echo "Error: Expected 1 argument, but got $#, usage: ./analysis <file_path>" >&2
     exit 1
 fi
 
@@ -25,7 +25,7 @@ then
     exit 1
 fi
 
-# ---------- Q1 The most popular game mechanics is Hand Management found in xx games -------------
+
 gawk '
 function find_max(array) 
 {
@@ -39,11 +39,28 @@ function find_max(array)
         return max_key "&&" max_val
 }
 
+function pearson_r(n, sum_x, sum_y, sum_x_y, sum_x2, sum_y2)
+{
+    a = (n*sum_x_y - sum_x*sum_y)
+    b = (n*sum_x2 - sum_x*sum_x) * (n*sum_y2 - sum_y*sum_y)
+    c = sqrt(b)
+    r = a/c
+    return r
+}
+
 BEGIN{
     FS ="\t"
+    sum_year = 0
+    sum_avg_rating = 0
+    sum_year_multiple_avg_rating = 0
+    sum_year_sq = 0
+    sum_avg_rating_sq = 0
+    row_count = 0
 }
 
 {
+# ---------- Q1 The most popular game mechanics is xxx found in xx games -------------
+
     # Incase some empty field with multiple space
     # $13 is the column mechanics
     clean_mechanic = $13
@@ -65,6 +82,7 @@ BEGIN{
 
     }
 
+# ---------- Q2 The most style of game is xxx found in xx games -------------
 
     # Incase some empty field with multiple space
     # $14 is the column domains
@@ -87,12 +105,56 @@ BEGIN{
 
     }
 
-}
+# ---------- Q3 The correlation between the year of publication and the average rating is xxx -------------
 
+
+    # if one of "year of publication" or "average rating" is empty at the same row, it wil not count in n
+    clean_year = $3
+    clean_avg_rating = $9
+    gsub(/[ \t\r\n]+/, "", clean_year)
+    gsub(/[ \t\r\n]+/, "", clean_avg_rating)
+
+
+
+    if (NR>1 && clean_year !="" && clean_avg_rating !="" ){
+
+
+        #Calculate row_count for total rows
+        row_count++
+
+        #Calculate ∑year
+        sum_year = sum_year + $3
+
+        #Calculate ∑avg_rating
+        sum_avg_rating = sum_avg_rating + $9
+
+        #Calculate ∑year*avg_rating
+        year_multiple_avg_rating = $3 * $9
+        sum_year_multiple_avg_rating = year_multiple_avg_rating + sum_year_multiple_avg_rating
+
+        #Calculate ∑year*year
+        year_sq = $3 * $3
+        sum_year_sq = year_sq + sum_year_sq
+
+        #Calculate ∑avg_rating*avg_rating
+        avg_rating_sq = $9*$9
+        sum_avg_rating_sq = avg_rating_sq + sum_avg_rating_sq
+    }
+
+
+
+
+
+}
+# function pearson_r(n, sum_x, sum_y, sum_x_y, sum_x2, sum_y2)
 END{
     split(find_max(mechanic_count), mparts, "&&")
     split(find_max(domain_count), dparts, "&&")
+    r = pearson_r(row_count, sum_year, sum_avg_rating, sum_year_multiple_avg_rating, sum_year_sq, sum_avg_rating_sq)
+
     print "The most popular game mechanics is", mparts[1], "found in", mparts[2], "games"
     print "The most style of game is", dparts[1], "found in", dparts[2], "games"
+    printf "The correlation between the year of publication and the average rating is %.3f\n", r
+
 }
 ' "$file_path"
