@@ -22,7 +22,7 @@ fi
 
 if ! echo "$file_path" | grep -q '\.txt$'
 then
-    echo "Error: The specified input file '$file_path' is not a CSV file." >&2
+    echo "Error: The specified input file '$file_path' is not a txt file." >&2
     exit 1
 fi
 
