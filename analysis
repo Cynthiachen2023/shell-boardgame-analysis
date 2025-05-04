@@ -39,23 +39,55 @@ function find_max(array)
         return max_key "&&" max_val
 }
 
-function pearson_r(n, sum_x, sum_y, sum_x_y, sum_x2, sum_y2)
+function pearson_r(name, n, sum_x, sum_y, sum_x_y, sum_x2, sum_y2)
 {
+    n = var_n[name]
+    sum_x=var_sum_x[name] 
+    sum_y=var_sum_y[name]
+    sum_x2=var_sum_x2[name] 
+    sum_y2=var_sum_y2[name] 
+    sum_x_y=var_sum_xy[name]
+
     a = (n*sum_x_y - sum_x*sum_y)
     b = (n*sum_x2 - sum_x*sum_x) * (n*sum_y2 - sum_y*sum_y)
+
+    if (b <= 0) return "undefined"
+
     c = sqrt(b)
     r = a/c
     return r
 }
 
+function pearson_variables(x, y, name){
+    x_clean = x
+    y_clean = y
+    gsub(/[ \t\r\n]+/, "", x_clean)
+    gsub(/[ \t\r\n]+/, "", y_clean)
+    if(x_clean !="" && y_clean !=""){
+        var_n[name]++
+        var_sum_x[name] += x
+        var_sum_y[name] += y
+        var_sum_x2[name] += x * x
+        var_sum_y2[name] += y * y
+        var_sum_xy[name] += x * y
+    }
+}
+
+
 BEGIN{
     FS ="\t"
-    sum_year = 0
-    sum_avg_rating = 0
-    sum_year_multiple_avg_rating = 0
-    sum_year_sq = 0
-    sum_avg_rating_sq = 0
-    row_count = 0
+
+    # Mechanics and Domains counts
+    delete mechanic_count
+    delete domain_count
+
+    # Correlation accumulators (by key)
+    delete var_n
+    delete var_sum_x
+    delete var_sum_y
+    delete var_sum_xy
+    delete var_sum_x2
+    delete var_sum_y2
 }
 
 {
@@ -105,56 +137,40 @@ BEGIN{
 
     }
 
-# ---------- Q3 The correlation between the year of publication and the average rating is xxx -------------
+    if (NR>1){
+        # Q3
+        pearson_variables($3,$9, "year_rating")
 
-
-    # if one of "year of publication" or "average rating" is empty at the same row, it wil not count in n
-    clean_year = $3
-    clean_avg_rating = $9
-    gsub(/[ \t\r\n]+/, "", clean_year)
-    gsub(/[ \t\r\n]+/, "", clean_avg_rating)
-
-
-
-    if (NR>1 && clean_year !="" && clean_avg_rating !="" ){
-
-
-        #Calculate row_count for total rows
-        row_count++
-
-        #Calculate ∑year
-        sum_year = sum_year + $3
-
-        #Calculate ∑avg_rating
-        sum_avg_rating = sum_avg_rating + $9
-
-        #Calculate ∑year*avg_rating
-        year_multiple_avg_rating = $3 * $9
-        sum_year_multiple_avg_rating = year_multiple_avg_rating + sum_year_multiple_avg_rating
-
-        #Calculate ∑year*year
-        year_sq = $3 * $3
-        sum_year_sq = year_sq + sum_year_sq
-
-        #Calculate ∑avg_rating*avg_rating
-        avg_rating_sq = $9*$9
-        sum_avg_rating_sq = avg_rating_sq + sum_avg_rating_sq
+        # Q4
+        pearson_variables($11,$9, "complexity_rating")
+    
     }
 
-
-
-
-
 }
-# function pearson_r(n, sum_x, sum_y, sum_x_y, sum_x2, sum_y2)
+
 END{
+    # Q1
     split(find_max(mechanic_count), mparts, "&&")
+    # Q2
     split(find_max(domain_count), dparts, "&&")
-    r = pearson_r(row_count, sum_year, sum_avg_rating, sum_year_multiple_avg_rating, sum_year_sq, sum_avg_rating_sq)
+    # Q3
+    r_year = pearson_r("year_rating")
+    # Q4
+    r_complexity = pearson_r("complexity_rating")
 
     print "The most popular game mechanics is", mparts[1], "found in", mparts[2], "games"
     print "The most style of game is", dparts[1], "found in", dparts[2], "games"
-    printf "The correlation between the year of publication and the average rating is %.3f\n", r
+    if (r_year == "undefined") {
+        print "The varelation between the year of publication and the average rating is undefined (zero variance or numeric error)"
+    } else {
+        printf "The varelation between the year of publication and the average rating is %.3f\n", r_year
+    }
+
+    if (r_complexity == "undefined") {
+        print "The correlation between the complexity of a game and its average rating is undefined (zero variance or numeric error)"
+    } else {
+        printf "The correlation between the complexity of a game and its average rating is %.3f\n", r_complexity
+    }
 
 }
 ' "$file_path"
